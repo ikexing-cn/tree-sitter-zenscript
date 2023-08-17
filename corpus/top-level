@@ -1,0 +1,18 @@
+=====
+import declaration test
+=====
+
+import a.b.c.d as D;
+
+---
+(compilation_unit
+  (import_declaration
+    (qualified_name
+      (qualified_name
+        (qualified_name
+          (identifier)
+          (identifier))
+        (identifier))
+      (identifier))
+    (as)
+    (identifier)))
