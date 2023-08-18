@@ -1,0 +1,5 @@
+// function a(a as string, b, c) as void {}
+
+// [aaaa][]
+
+# $expand int $plus(a as int) {}

@@ -5,7 +5,9 @@
   "main": "bindings/node",
   "scripts": {
     "test": "tree-sitter test",
-    "generate": "tree-sitter generate"
+    "generate": "tree-sitter generate",
+    "retest": "npm run generate && npm run test",
+    "local-test": "nr generate && tree-sitter parse test.txt"
   },
   "keywords": [
     "tree-sitter",

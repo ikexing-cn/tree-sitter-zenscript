@@ -23,21 +23,12 @@ module.exports = grammar({
         $.class_declaration,
         $.function_declaration,
         $.expand_function_declaration,
-        $.statement,
+        $._statement,
       ),
 
     /**
      * 'import' qualifiedName ('as' alias)? ';'
      */
-    as: () => token('as'),
-    import: () => token('import'),
-
-    qualified_name: $ => seq(
-      field('scope', $._name),
-      '.',
-      field('name', $.identifier),
-    ),
-
     import_declaration: $ => seq(
       'import',
       $._name,
@@ -47,11 +38,42 @@ module.exports = grammar({
 
     class_declaration: () => choice('todo1'),
 
-    function_declaration: () => choice('todo2'),
+    /**
+     * prefix='static'? 'function' identifier '(' formalParameterList ')' ('as' returnType)? functionBody
+     */
+    function_declaration: $ => seq(
+      optional($.static),
+      'function',
+      field('id', $.identifier),
+      '(',
+      optional($.formal_parameter_list),
+      ')',
+      optional(seq($.as, field('return_type', $._type_literal))),
+      $.function_body,
+    ),
 
-    expand_function_declaration: () => choice('todo3'),
+    function_body: $ => seq(
+      '{',
+      optional(repeat1($._statement)),
+      '}',
+    ),
 
-    statement: () => choice('todo4'),
+    /**
+     * '$expand' typeLiteral '$' simpleName '(' formalParameterList ')' ('as' returnType)? functionBody
+     */
+    expand_function_declaration: $ => seq(
+      '$expand',
+      field('type', $._type_literal),
+      '$',
+      field('id', $.identifier),
+      '(',
+      optional($.formal_parameter_list),
+      ')',
+      optional(seq($.as, field('return_type', $._type_literal))),
+      $.function_body,
+    ),
+
+    _statement: () => choice('todo4'),
 
     /**
      * utility
@@ -69,6 +91,77 @@ module.exports = grammar({
         seq('#', /.*/),
         seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/'),
       ),
+    ),
+
+    qualified_name: $ => seq(
+      field('scope', $._name),
+      '.',
+      field('name', $.identifier),
+    ),
+
+    as: () => token('as'),
+    static: () => token('static'),
+
+    /**
+     * identifier ('as' typeLiteral)? ('=' defaultValue)?
+     */
+    formal_parameter_list: $ => seq(
+      $.formal_parameter,
+      optional(repeat1(seq(',', $.formal_parameter))),
+    ),
+
+    formal_parameter: $ => seq(
+      field('id', $.identifier),
+      /* TODO: DefaultValue(Expr) */
+      optional(seq($.as, field('type', $._type_literal))),
+    ),
+
+    /**
+     * typeLiteral
+     */
+    _type_literal: $ => choice(
+      field('class_type', $._name),
+      $.function_type,
+      $.list_type,
+      $.array_type,
+      $.map_type,
+      $.primitive_type,
+    ),
+
+    type_literal_list: $ => seq(
+      $._type_literal,
+      optional(repeat1(seq(',', $._type_literal))),
+    ),
+
+    function_type: $ => seq(
+      'function',
+      '(',
+      $.type_literal_list,
+      ')',
+      field('return_type', $._type_literal),
+    ),
+
+    list_type: $ => seq(
+      '[',
+      $._type_literal,
+      ']',
+    ),
+
+    array_type: $ => prec(1, seq(
+      $._type_literal,
+      '[',
+      ']',
+    )),
+
+    map_type: $ => prec(1, seq(
+      field('value', $._type_literal),
+      '[',
+      field('key', $._type_literal),
+      ']',
+    )),
+
+    primitive_type: () => choice(
+      'any', 'byte', 'short', 'int', 'long', 'float', 'double', 'bool', 'void', 'string',
     ),
   },
 })
