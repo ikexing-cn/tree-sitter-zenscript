@@ -1,6 +1,6 @@
-=====
+============================================
 import declaration test
-=====
+============================================
 
 import a.b.c.d as D;
 
@@ -16,3 +16,36 @@ import a.b.c.d as D;
       (identifier))
     (as)
     (identifier)))
+
+============================================
+(expand) function declaration test
+============================================
+
+function test(a as B, b as C) {}
+$expand int $plus(a as int) {}
+
+---
+(compilation_unit
+  (function_declaration
+    (identifier)
+    (formal_parameter_list
+      (formal_parameter
+        (identifier)
+        (as)
+        (class_type
+          (identifier)))
+      (formal_parameter
+        (identifier)
+        (as)
+        (class_type
+          (identifier))))
+    (function_body))
+  (expand_function_declaration
+    (primitive_type)
+    (identifier)
+    (formal_parameter_list
+      (formal_parameter
+        (identifier)
+        (as)
+        (primitive_type)))
+    (function_body)))
