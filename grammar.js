@@ -73,10 +73,99 @@ module.exports = grammar({
       $.function_body,
     ),
 
-    _statement: () => choice('todo4'),
+    /**
+     * Statement
+     */
+    _statement: $ => choice(
+      $.block_statement,
+      $.return_statement,
+      $.break_statement,
+      $.continue_statement,
+      $.if_statement,
+      $.foreach_statement,
+      $.while_statement,
+      $.variable_declaration,
+      $.expression_statement,
+    ),
+
+    block_statement: $ => seq(
+      '{',
+      optional(repeat1($._statement)),
+      '}',
+    ),
+
+    return_statement: () => seq(
+      'return',
+      optional($._expression),
+      ';',
+    ),
+
+    break_statement: () => seq('break', ';'),
+
+    continue_statement: () => seq('continue', ';'),
 
     /**
-     * utility
+     * 'if' expression thenPart ('else' elsePart)?
+     */
+    if_statement: $ => prec.left(seq(
+      'if',
+      $._expression,
+      field('then_part', $._statement),
+      optional(seq('else', field('else_part', $._statement))),
+    )),
+
+    /**
+     * 'for' foreachVariableList 'in' expression foreachBody
+     */
+    foreach_statement: $ => seq(
+      'for',
+      $.foreach_variable_list,
+      'in',
+      $._expression,
+      field('body', $._statement),
+    ),
+
+    foreach_variable_list: $ => seq(
+      $.identifier,
+      optional(repeat1(seq(',', $.identifier))),
+    ),
+
+    /**
+     * 'while' '(' expression ')' statement
+     */
+    while_statement: $ => seq(
+      'while',
+      '(',
+      $._expression,
+      ')',
+      field('body', $._statement),
+    ),
+
+    /**
+     * prefix=('var' | 'val' | 'static' | 'global') simpleName ('as' typeLiteral)? ('=' initializer)? ';'
+     */
+    variable_declaration: $ => seq(
+      field('prefix', choice('var', 'val', 'static', 'global')),
+      field('id', $.identifier),
+      optional(seq($.as, field('type', $._type_literal))),
+      optional(seq('=', field('initializer', $._expression))),
+      ';',
+    ),
+
+    expression_statement: $ => seq(
+      $._expression,
+      ';',
+    ),
+
+    /**
+     * Expression
+     */
+    _expression: () => choice(
+      'todo4',
+    ),
+
+    /**
+     * Utility
      */
     _name: $ => choice(
       $.identifier,
@@ -120,7 +209,7 @@ module.exports = grammar({
      * typeLiteral
      */
     _type_literal: $ => choice(
-      field('class_type', $._name),
+      alias($._name, $.class_type),
       $.function_type,
       $.list_type,
       $.array_type,
